@@ -1,0 +1,1 @@
+This project aims to provide a plotting package for Common Lisp based on the bindings to the Cairo library implemented in cl-cairo2.

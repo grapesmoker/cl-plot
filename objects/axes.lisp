@@ -1,30 +1,10 @@
 (in-package :plot)
 
-(defclass axis (plot-object)
-  ;; beginning and end of the line that represents the axis
-  ((start-x  :accessor axis-start-x
-	     :initarg :start-x
-	     :initform nil)   
-   (start-y  :accessor axis-start-y
-	     :initarg :start-y
-	     :initform nil)
-   (end-x  :accessor axis-end-x
-	   :initarg :end-x
-	   :initform nil)   
-   (end-y  :accessor axis-end-y
-	   :initarg :end-y
-	   :initform nil)
-   ;; line thickness
-   (thickness :accessor axis-thickness
-	      :initarg :thickness)
-   ;; don't know what "style" means yet, but things like dashed, etc.
-   (style :accessor axis-style
-	  :initarg :style)
-   ;; color as an rgb-triplet
-   (color :accessor axis-color
-	  :initarg :color)
-   ;; min and max values being plotted on the axis
-   (min-value :accessor axis-min-value
+(defclass axis (line)
+  ;; we'll go ahead and inherit any line-related properties from
+  ;; the line class itself
+  ;; min and max values being plotted on the axis
+  ((min-value :accessor axis-min-value
 	      :initarg :min)
    (max-value :accessor axis-max-value
 	      :initarg :max)
@@ -67,12 +47,5 @@
 
 
 (defmethod draw-axis ((ax axis) context)
-  (with-context (context)
-    (destructuring-bind (r g b) (axis-color ax)
-      (set-source-rgb r g b)
-      (set-line-width (axis-thickness ax))
-      (move-to (axis-start-x ax)
-	       (axis-start-y ax))
-      (line-to (axis-end-x ax)
-	       (axis-end-y ax))
-      (stroke))))
+  ;;(with-context (context)
+  (draw-line ax context))

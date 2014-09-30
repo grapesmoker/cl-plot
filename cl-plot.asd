@@ -19,6 +19,7 @@
   ((:module objects
 	    :components
 	    ((:file "plot-objects")
+             (:file "line")
 	     (:file "axes"))
 	    :serial t)
    (:module tests

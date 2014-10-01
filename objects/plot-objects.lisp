@@ -12,3 +12,7 @@
 
 (defmethod upper-right ((obj plot-object))
   (subseq (bbox obj) 2 4))
+
+(defgeneric draw-plot-object (obj  context)
+  (:documentation "A generic function that draws the plot-object in the given context.
+Every class that derives from plot-object should implement this function."))

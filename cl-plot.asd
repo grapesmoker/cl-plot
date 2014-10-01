@@ -18,8 +18,11 @@
   :components
   ((:module objects
 	    :components
-	    ((:file "plot-objects")
+	    ((:file "options")
+             (:file "plot-objects")
+             (:file "point")
              (:file "line")
+             (:file "ticks")
 	     (:file "axes"))
 	    :serial t)
    (:module tests

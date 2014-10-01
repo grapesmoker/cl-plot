@@ -54,3 +54,14 @@
 	       (line-end-y l))
       (stroke))))
 
+(defmethod draw-plot-object ((l line) context)
+  ;; context is passed down to us from above
+  (with-context (context)
+    (destructuring-bind (r g b) (line-color l)
+      (set-source-rgb r g b)
+      (set-line-width (line-thickness l))
+      (move-to (line-start-x l)
+	       (line-start-y l))
+      (line-to (line-end-x l)
+	       (line-end-y l))
+      (stroke))))

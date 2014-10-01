@@ -127,7 +127,15 @@ the bounding box of the parent axes."
     (draw-line ax context)))
 
 (defmethod copy-axis-line ((ax axis))
-  ())
+  "Creates a line with all the properties of the axis."
+  (make-instance 'line 
+                 :color (line-color ax)
+                 :thickness (line-thickness ax)
+                 :style (line-style ax)
+                 :start-x (line-start-x ax)
+                 :end-x (line-end-x ax)
+                 :start-y (line-start-y ax)
+                 :end-y (line-end-y ax)))
 
 
 (defmethod draw-plot-object ((ax axes) context)

@@ -23,7 +23,9 @@
              (:file "point")
              (:file "line")
              (:file "ticks")
-	     (:file "axes"))
+	     (:file "axes")
+             (:file "plots")
+             (:file "plot-image"))
 	    :serial t)
    (:module tests
 	    :components

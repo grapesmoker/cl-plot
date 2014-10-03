@@ -15,13 +15,23 @@
 	   :initform nil)
    ;; line thickness
    (thickness :accessor line-thickness
-	      :initarg :thickness)
+	      :initarg :thickness
+              :initform nil)
    ;; don't know what "style" means yet, but things like dashed, etc.
    (style :accessor line-style
-	  :initarg :style)
+	  :initarg :style
+          :initform nil)
    ;; color as an rgb-triplet
    (color :accessor line-color
-	  :initarg :color)))
+	  :initarg :color
+          :initform nil)))
+
+(defmethod print-object ((l line) stream)
+  (format t "#LINE<(~D, ~D) -> (~D, ~D)>" 
+          (line-start-x l)
+          (line-start-y l)
+          (line-end-x l)
+          (line-end-y l)))
 
 ;; it's not clear to me whether a line actually needs to have a
 ;; bounding box; put it in for now and we'll figure it out if we need

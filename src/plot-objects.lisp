@@ -1,9 +1,14 @@
 (in-package :plot)
 
 (defclass plot-object ()
+  ;; every plot object should know who its parent is so we can
+  ;; navigate up and down the hierarchy in any direction
+  ((parent :accessor plot-object-parent
+           :initarg :parent
+           :initform nil)
   ;; every object that we plot needs to have a bounding box
   ;; which is a 4-tuple of (lower-left-x lower-left-y upper-right-x upper-right-y)
-  ((bbox   :accessor bbox
+   (bbox   :accessor bbox
            :initarg :bbox
            :initform nil)))
 

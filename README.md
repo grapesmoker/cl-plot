@@ -32,8 +32,20 @@ Currently, you can't do a whole lot other than plot 2D data (without labels or t
 	
 This will produce a PNG with 100 randomly sized and randomly colored points. To plot some data, try:
 
-	(let* ((x (loop for i from 0 to 100 collect (* i (/ (* 2 pi) 100)) (y (mapcar #'sin x)))
-		(plot x y "/path/to/output.png"))
+	(let*  ((x (loop for i from 0 to 100 collect (* i (/ (* 2 pi) 100)))) 
+		(y (mapcar #'sin x)))
+	   (plot x y "/path/to/output.png"))
 		
-asda
+This should produce a pattern of dots in the shape of a sine wave.
+
+## Future work
+
+Obviously lots of stuff left to do before this is ready for prime-time. A nonexhaustive list of future features:
+- tick marks
+- labels
+- legends
+- different plot types: bar, line, mesh, radar/polar, streamline, etc.
+- ability to put multiple plots in figure
+
+Eventually, this will be combined with a GUI library to support interactive backends. The goal is to be able to plot in a window just like Matplotlib.
 	

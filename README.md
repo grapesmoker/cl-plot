@@ -32,5 +32,8 @@ Currently, you can't do a whole lot other than plot 2D data (without labels or t
 	
 This will produce a PNG with 100 randomly sized and randomly colored points. To plot some data, try:
 
-	(let* ((x (loop for i from 0 to 100 collect (* i (/ (* 2 pi) 100))
+	(let* ((x (loop for i from 0 to 100 collect (* i (/ (* 2 pi) 100)) (y (mapcar #'sin x)))
+		(plot x y "/path/to/output.png"))
+		
+asda
 	

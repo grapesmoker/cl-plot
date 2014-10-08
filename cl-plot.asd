@@ -25,7 +25,8 @@
              (:file "ticks")
 	     (:file "axes")
              (:file "plots")
-             (:file "plot-image"))
+             (:file "plot-image")
+             (:file "plot-functions"))
 	    :serial t)
    (:module tests
 	    :components

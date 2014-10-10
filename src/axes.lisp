@@ -161,47 +161,40 @@ the bounding box of the parent axes."
     (setf (line-end-y y-axis) (+ y-off height))))
 
 (defmethod set-data-to-axes-tforms ((ax axes))
-  (loop
-     for data in (axes-data ax)
-     do
-       (let* ((x-axis (axes-x-axis ax))
-	      (y-axis (axes-y-axis ax))
-	      (x-padding (axis-padding x-axis))
-	      (y-padding (axis-padding y-axis))
-	      (axes-bbox (bbox ax))
-	      ;; assume x-data and y-data have been set
-	      (x-data (data-obj-x-data data))
-	      (y-data (data-obj-y-data data))
-	      ;; data max and min
-	      ;;(dummy (format t "~A~%" x-data))
-	      (x-data-max (apply #'max x-data))
-	      (y-data-max (apply #'max y-data))
-	      (x-data-min (apply #'min x-data))
-	      (y-data-min (apply #'min y-data))
-	      ;;(dummy2 (format t "here ~%"))
-	      ;; data deltas
-	      (x-axis-delta (- (elt axes-bbox 2) (elt axes-bbox 0) (* 2 x-padding)))
-	      (y-axis-delta (- (elt axes-bbox 3) (elt axes-bbox 1) (* 2 y-padding)))
-	      (x-data-delta (- x-data-max x-data-min))
-	      (y-data-delta (- y-data-max y-data-min))
-	      ;; scale factors
-	      (x-scale (/ x-axis-delta x-data-delta))
-	      (y-scale (/ y-axis-delta y-data-delta))
-	      ;; offsets
-	      (x-offset (- (elt axes-bbox 2) (* x-data-max x-scale) (* 2 x-padding)))
-	      (y-offset (- (elt axes-bbox 3) (* y-data-max y-scale) (* 2 y-padding)))
-	      )
+  (let* ((data-objects (axes-data ax))
+	 (im-height (plot-image-height (plot-object-parent (plot-object-parent ax))))
+	 (flat-x-data (apply #'append (mapcar #'data-obj-x-data data-objects)))
+	 (flat-y-data (apply #'append (mapcar #'data-obj-y-data data-objects)))
+	 (x-data-max (apply #'max flat-x-data))
+	 (x-data-min (apply #'min flat-x-data))
+	 (y-data-max (apply #'max flat-y-data))
+	 (y-data-min (apply #'min flat-y-data))
+	 (x-axis (axes-x-axis ax))
+	 (y-axis (axes-y-axis ax))
+	 (x-padding (axis-padding x-axis))
+	 (y-padding (axis-padding y-axis))
+	 (axes-bbox (bbox ax))
+	 (x-axis-delta (- (elt axes-bbox 2) (elt axes-bbox 0) (* 2 x-padding)))
+	 (y-axis-delta (- (elt axes-bbox 3) (elt axes-bbox 1) (* 2 y-padding)))
+	 (x-data-delta (- x-data-max x-data-min))
+	 (y-data-delta (- y-data-max y-data-min))
+	 ;; scale factors
+	 (x-scale (/ x-axis-delta x-data-delta))
+	 (y-scale (/ y-axis-delta y-data-delta))
+	 ;; offsets
+	 (x-offset (- (elt axes-bbox 2) (* x-data-max x-scale) (* 2 x-padding)))
+	 (y-offset (- (elt axes-bbox 3) (* y-data-max y-scale) (* 2 y-padding))))
 
-	 (labels ((scale-x (x)
-		    (coerce 
-		     (+ (* x x-scale) x-offset x-padding)
-		     'float))
-		  (scale-y (y)
-		    (coerce 
-		     (+ (* y y-scale) y-offset y-padding) 
-		     'float)))
-	   (push #'scale-x (axes-data-x-tforms ax))
-	   (push #'scale-y (axes-data-y-tforms ax))))))
+    (labels ((scale-x (x)
+	       (coerce 
+		(+ (* x x-scale) x-offset x-padding)
+		'float))
+	     (scale-y (y)
+	       (coerce 
+		(- im-height (+ (* y y-scale) y-offset y-padding))
+		'float)))
+      (setf (axes-data-x-tforms ax) #'scale-x)
+      (setf (axes-data-y-tforms ax) #'scale-y))))
 
 (defmethod scale-data-to-axes ((ax axes))
   "This function scales the data supplied to the axes by performing
@@ -213,8 +206,10 @@ into image space."
   (print (length (axes-data ax)))
   (loop
      for data in (axes-data ax)
-     do
-       (format t "x data: ~A~%" (data-obj-x-data data))
+     with x-tform = (axes-data-x-tforms ax)
+     with y-tform = (axes-data-y-tforms ax)
+     ;;do
+     ;;  (format t "x data: ~A~%" (data-obj-x-data data))
      collect
        (let* ((scaled-data (make-instance 'data-object 
                                           :color (data-obj-color data)
@@ -222,79 +217,70 @@ into image space."
                                           :type (data-obj-type data)
                                           :thickness (data-obj-thickness data)
                                           :parent (plot-object-parent data)))
-              (x-axis (axes-x-axis ax))
-              (y-axis (axes-y-axis ax))
-                                        ;(min-x (axis-min-value x-axis))
-                                        ;(max-x (axis-max-value x-axis))
-                                        ;(min-y (axis-min-value y-axis))
-                                        ;(max-y (axis-min-value y-axis))
-              (x-padding (axis-padding x-axis))
-              (y-padding (axis-padding y-axis))
-              (axes-bbox (bbox ax))
-              ;; assume x-data and y-data have been set
-              (x-data (data-obj-x-data data))
-              (y-data (data-obj-y-data data))
-              ;; data max and min
-              ;;(dummy (format t "~A~%" x-data))
-              (x-data-max (apply #'max x-data))
-              (y-data-max (apply #'max y-data))
-              (x-data-min (apply #'min x-data))
-              (y-data-min (apply #'min y-data))
-              ;;(dummy2 (format t "here ~%"))
-              ;; data deltas
-              (x-axis-delta (- (elt axes-bbox 2) (elt axes-bbox 0) (* 2 x-padding)))
-              (y-axis-delta (- (elt axes-bbox 3) (elt axes-bbox 1) (* 2 y-padding)))
-              (x-data-delta (- x-data-max x-data-min))
-              (y-data-delta (- y-data-max y-data-min))
-              ;; scale factors
-              (x-scale (/ x-axis-delta x-data-delta))
-              (y-scale (/ y-axis-delta y-data-delta))
-              ;; offsets
-              (x-offset (- (elt axes-bbox 2) (* x-data-max x-scale) (* 2 x-padding)))
-              (y-offset (- (elt axes-bbox 3) (* y-data-max y-scale) (* 2 y-padding)))
-              )
-
+	      (x-data (data-obj-x-data data))
+	      (y-data (data-obj-y-data data)))
          ;; currently we only accept sequences as data; at some point we
          ;; should add support for vectors
          ;; until we get a proper condition system up
-         (assert (= (length x-data) (length y-data)))
 
-         (labels ((scale-x (x)
-                    (coerce 
-                     (+ (* x x-scale) x-offset x-padding)
-                     'float))
-                  (scale-y (y)
-                    (coerce 
-                     (+ (* y y-scale) y-offset y-padding) 
-                     'float)))
            ;;(format t "x-axis-delta: ~F, y-axis-delta: ~F~%" x-axis-delta y-axis-delta)
            ;;(format t "x-scale: ~F, y-scale: ~F~%" x-scale y-scale)
-           (let ((scaled-x-data (mapcar #'scale-x x-data))
-                 (scaled-y-data (mapcar #'scale-y y-data)))
+           (let ((scaled-x-data (mapcar x-tform x-data))
+                 (scaled-y-data (mapcar y-tform y-data)))
              ;;(format t "~A~%" scaled-x-data)
              ;;(format t "~A~%" scaled-y-data)
              (setf (data-obj-x-data scaled-data) scaled-x-data)
              (setf (data-obj-y-data scaled-data) scaled-y-data)
-             scaled-data)))))
+             scaled-data))))
                    
 (defmethod set-tick-marks ((ax axes) &key (num-major-ticks 5) (step-fraction 0.2))
-  (let* ((data (axes-data ax))
-	 (x-data (data-obj-x-data data))
-	 (y-data (data-obj-y-data data))
-	 (min-x (apply #'min x-data))
-	 (max-x (apply #'max x-data))
-	 (min-y (apply #'min y-data))
-	 (max-y (apply #'max y-data))
-	 (space-between-ticks (/ (- max-x min-x) num-major-ticks))
+  (declare (ignore step-fraction))
+  (let* ((data-objects (axes-data ax))
+	 (im-height (plot-image-height (plot-object-parent (plot-object-parent ax))))
+	 (flat-x-data (apply #'append (mapcar #'data-obj-x-data data-objects)))
+	 (flat-y-data (apply #'append (mapcar #'data-obj-y-data data-objects)))
+	 (x-data-max (apply #'max flat-x-data))
+	 (x-data-min (apply #'min flat-x-data))
+	 (y-data-max (apply #'max flat-y-data))
+	 (y-data-min (apply #'min flat-y-data))
+	 (x-axis (axes-x-axis ax))
+	 (y-axis (axes-y-axis ax))
+	 (x-tform (axes-data-x-tforms ax))
+	 (y-tform (axes-data-y-tforms ax))
+	 (space-between-x-ticks (abs (/ (- x-data-max x-data-min) num-major-ticks)))
+	 (space-between-y-ticks (abs (/ (- y-data-max y-data-min) num-major-ticks)))
 	 (major-x-ticks
 	  (loop
-	     with x-coord = min-x
-	     while (<= x-coord max-x)
+	     with x-coord = x-data-min
+	     while (<= x-coord x-data-max)
 	     collect
-	       (let ((tick (make-instance 'tick :type :major :axis-coord x-coord)))
-		 (incf x-coord space-between-ticks)
+	       (let ((tick (make-instance 'tick 
+					  :type :major 
+					  :color *default-line-color*
+					  :axis-coord x-coord
+					  :start-x (funcall x-tform x-coord)
+					  :end-x (funcall x-tform x-coord)
+					  :start-y (- im-height (line-start-y x-axis))
+					  :end-y (- im-height (- (line-end-y x-axis) 5)))))
+		 (incf x-coord space-between-x-ticks)
+		 tick)))
+	 (major-y-ticks
+	  (loop
+	     with y-coord = y-data-min
+	     while (<= y-coord y-data-max)
+	     collect
+	       (let ((tick (make-instance 'tick
+					  :type :major
+					  :color *default-line-color*
+					  :axis-coord y-coord
+					  :start-x (line-start-x y-axis)
+					  :end-x (- (line-end-x y-axis) 5)
+					  :start-y (funcall y-tform y-coord) 
+					  :end-y  (funcall y-tform y-coord))))
+		 (incf y-coord space-between-y-ticks)
 		 tick))))
-    (setf (axis-major-ticks (axes-x-axis ax)) major-x-ticks)))
+    (setf (axis-major-ticks x-axis) major-x-ticks)
+    (setf (axis-major-ticks y-axis) major-y-ticks)))
 	  
 
 
@@ -344,16 +330,16 @@ into image space."
       ;; the children's start/end points line up with the corners of
       ;; the bounding box
 
+      ;; draw the tick marks
+      (set-tick-marks ax)
       ;; draw the axes themselves
       (dolist (axis `(,x-axis ,y-axis))
         ;; image-y = image-height - y
         (let ((axis-line (copy-axis-line axis)))
           (setf (line-start-y axis-line) (- im-height (line-start-y axis-line)))
           (setf (line-end-y axis-line) (- im-height (line-end-y axis-line)))
-          (draw-plot-object axis-line context)))
-
-      ;; draw the tick marks
-      
+          (draw-plot-object axis-line context)
+	  (loop for mark in (axis-major-ticks axis) do (draw-plot-object mark context))))
 
       ;; now draw the data
       (dolist (data-obj scaled-data)
@@ -365,7 +351,7 @@ into image space."
              (let ((data-point 
                     (make-instance 'point 
                                    :x x 
-                                   :y (- im-height y)
+                                   :y y ;;o (- im-height y)
                                    :color (data-obj-color data-obj)
                                    :weight (data-obj-thickness data-obj)
                                    )))

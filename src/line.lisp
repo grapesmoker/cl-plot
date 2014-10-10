@@ -16,7 +16,7 @@
    ;; line thickness
    (thickness :accessor line-thickness
 	      :initarg :thickness
-              :initform nil)
+              :initform *default-line-thickness*)
    ;; don't know what "style" means yet, but things like dashed, etc.
    (style :accessor line-style
 	  :initarg :style
@@ -24,7 +24,7 @@
    ;; color as an rgb-triplet
    (color :accessor line-color
 	  :initarg :color
-          :initform nil)))
+          :initform *default-line-color*)))
 
 (defmethod print-object ((l line) stream)
   (format t "#LINE<(~D, ~D) -> (~D, ~D)>" 

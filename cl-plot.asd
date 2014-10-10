@@ -1,6 +1,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (ql:quickload :cl-cairo2))
-
+ 
 (defpackage :cl-plot
   (:nicknames :plot)
   (:use :cl :cairo)

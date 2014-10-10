@@ -35,7 +35,6 @@
                               :style style)))
     (setf (plot-object-parent plot) image)
     (setf (plot-object-parent axes) plot)
-
     (cond ((and (numberp x)
                 (numberp y))
            (setf (data-obj-x-data data) (list x))
@@ -50,14 +49,15 @@
            (unless (= (length x) (length y))
              (error 'error))
            (setf (data-obj-x-data data) x)
-           (setf (data-obj-y-data data) y))
+           (setf (data-obj-y-data data) y)
+	   (push data (axes-data axes)))
 
           ((and (listp x)
                 (listp y)
                 (every #'listp x)
                 (every #'listp y))
            (print "multiple lists")
-           (setf (axes-data ax) nil)
+           (setf (axes-data axes) nil)
            (unless (= (length x) (length y))
              (error 'error))
            (loop
@@ -79,4 +79,6 @@
           (t ()))
     (when (axes-data axes)
       (format t "plotting ~%")
-      (draw-plot-object image nil))))
+      (set-data-to-axes-tforms axes)
+      (draw-plot-object image nil)
+      axes)))

@@ -73,7 +73,13 @@
    ;; the data that the plots hold
    (data-objects :accessor axes-data
                  :initarg :data
-                 :initform nil)))
+                 :initform nil)
+   (data-x-transforms :accessor axes-data-x-tforms
+		      :initarg :data-x-tforms
+		      :initform nil)
+   (data-y-transforms :accessor axes-data-y-tforms
+		      :initarg :data-y-tforms
+		      :initform nil)))
 
 (defmethod initialize-instance :before ((ax axes) &rest args)
   (declare (ignore args))
@@ -154,6 +160,49 @@ the bounding box of the parent axes."
     (setf (line-start-y y-axis) y-off)
     (setf (line-end-y y-axis) (+ y-off height))))
 
+(defmethod set-data-to-axes-tforms ((ax axes))
+  (loop
+     for data in (axes-data ax)
+     do
+       (let* ((x-axis (axes-x-axis ax))
+	      (y-axis (axes-y-axis ax))
+	      (x-padding (axis-padding x-axis))
+	      (y-padding (axis-padding y-axis))
+	      (axes-bbox (bbox ax))
+	      ;; assume x-data and y-data have been set
+	      (x-data (data-obj-x-data data))
+	      (y-data (data-obj-y-data data))
+	      ;; data max and min
+	      ;;(dummy (format t "~A~%" x-data))
+	      (x-data-max (apply #'max x-data))
+	      (y-data-max (apply #'max y-data))
+	      (x-data-min (apply #'min x-data))
+	      (y-data-min (apply #'min y-data))
+	      ;;(dummy2 (format t "here ~%"))
+	      ;; data deltas
+	      (x-axis-delta (- (elt axes-bbox 2) (elt axes-bbox 0) (* 2 x-padding)))
+	      (y-axis-delta (- (elt axes-bbox 3) (elt axes-bbox 1) (* 2 y-padding)))
+	      (x-data-delta (- x-data-max x-data-min))
+	      (y-data-delta (- y-data-max y-data-min))
+	      ;; scale factors
+	      (x-scale (/ x-axis-delta x-data-delta))
+	      (y-scale (/ y-axis-delta y-data-delta))
+	      ;; offsets
+	      (x-offset (- (elt axes-bbox 2) (* x-data-max x-scale) (* 2 x-padding)))
+	      (y-offset (- (elt axes-bbox 3) (* y-data-max y-scale) (* 2 y-padding)))
+	      )
+
+	 (labels ((scale-x (x)
+		    (coerce 
+		     (+ (* x x-scale) x-offset x-padding)
+		     'float))
+		  (scale-y (y)
+		    (coerce 
+		     (+ (* y y-scale) y-offset y-padding) 
+		     'float)))
+	   (push #'scale-x (axes-data-x-tforms ax))
+	   (push #'scale-y (axes-data-y-tforms ax))))))
+
 (defmethod scale-data-to-axes ((ax axes))
   "This function scales the data supplied to the axes by performing
 the necessary affine transformations. ax should already know where
@@ -228,34 +277,25 @@ into image space."
              (setf (data-obj-y-data scaled-data) scaled-y-data)
              scaled-data)))))
                    
-         
-
-(defun cond-loop (x)
-  (conditional-loop x))
-
-(defmacro conditional-loop (x)
-  "A macro to conditionally loop on x depending on its type. "
-  (let ((iter-method (gensym))
-        (iter-value (gensym)))
-    `(progn
-       (let ((,iter-method 
-              (cond ((listp ,x)
-                     :in)
-                    ((arrayp ,x)
-                     :across)
-                    (t
-                     (print "no type for x")
-                     nil)))
-             (,iter-value
-              (cond ((listp ,x)
-                     ',x)
-                    ((arrayp ,x)
-                     ,x))))
-         (print ,iter-value)
-         `(loop
-             for n ,,iter-method ,,iter-value
-             do
-               (print n))))))
+(defmethod set-tick-marks ((ax axes) &key (num-major-ticks 5) (step-fraction 0.2))
+  (let* ((data (axes-data ax))
+	 (x-data (data-obj-x-data data))
+	 (y-data (data-obj-y-data data))
+	 (min-x (apply #'min x-data))
+	 (max-x (apply #'max x-data))
+	 (min-y (apply #'min y-data))
+	 (max-y (apply #'max y-data))
+	 (space-between-ticks (/ (- max-x min-x) num-major-ticks))
+	 (major-x-ticks
+	  (loop
+	     with x-coord = min-x
+	     while (<= x-coord max-x)
+	     collect
+	       (let ((tick (make-instance 'tick :type :major :axis-coord x-coord)))
+		 (incf x-coord space-between-ticks)
+		 tick))))
+    (setf (axis-major-ticks (axes-x-axis ax)) major-x-ticks)))
+	  
 
 
 (defmethod draw-axis ((ax axis) context)
@@ -311,6 +351,9 @@ into image space."
           (setf (line-start-y axis-line) (- im-height (line-start-y axis-line)))
           (setf (line-end-y axis-line) (- im-height (line-end-y axis-line)))
           (draw-plot-object axis-line context)))
+
+      ;; draw the tick marks
+      
 
       ;; now draw the data
       (dolist (data-obj scaled-data)

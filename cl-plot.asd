@@ -16,7 +16,7 @@
   :defsystem-depends-on (#:cl-cairo2)
   :depends-on (#:cl-cairo2)
   :components
-  ((:module objects
+  ((:module src
 	    :components
 	    ((:file "options")
              (:file "plot-objects")
@@ -25,6 +25,7 @@
              (:file "ticks")
 	     (:file "axes")
              (:file "plots")
+	     (:file "data-object")
              (:file "plot-image")
              (:file "plot-functions"))
 	    :serial t)
